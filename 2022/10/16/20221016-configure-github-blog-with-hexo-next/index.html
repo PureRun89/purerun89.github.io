@@ -29,7 +29,7 @@
 <meta property="og:description" content="Here I note down what I did to configure my github.io blog.">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-10-16T07:37:32.000Z">
-<meta property="article:modified_time" content="2022-10-16T08:27:56.619Z">
+<meta property="article:modified_time" content="2022-10-16T08:44:21.770Z">
 <meta property="article:author" content="PureRun89">
 <meta property="article:tag" content="github blog">
 <meta property="article:tag" content="hexo">
@@ -233,7 +233,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2022-10-16 15:37:32 / Modified: 16:27:56" itemprop="dateCreated datePublished" datetime="2022-10-16T15:37:32+08:00">2022-10-16</time>
+      <time title="Created: 2022-10-16 15:37:32 / Modified: 16:44:21" itemprop="dateCreated datePublished" datetime="2022-10-16T15:37:32+08:00">2022-10-16</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -258,8 +258,7 @@
         <p>Here I note down what I did to configure my github.io blog.</p>
 <span id="more"></span>
 <h2 id="github-registration">GitHub Registration</h2>
-<p>A GitHub account is needed. It doesn't need to create one
-repository.</p>
+<p>A GitHub account, SSH key and repository creation is needed.</p>
 <h2 id="local-blog-with-hexo">Local Blog with Hexo</h2>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">1. Install Git and Node.js in any way.</span><br><span class="line">// Don&#x27;t ever change the mirror site of npm to taobao</span><br><span class="line">// since this would make hexo generator fail to run</span><br><span class="line">2. npm install -g hexo-cli</span><br><span class="line">3. hexo init folder-name</span><br><span class="line">4. cd folder-name</span><br><span class="line">5. npm install</span><br><span class="line">// What may occur here is error that shows &quot;a package version doesn&#x27;t exist&quot;</span><br><span class="line">// To fix it, change the version requirement in package.json to &quot;...&gt;0.0.0&quot;</span><br><span class="line">6. npm install hexo-theme-next</span><br><span class="line">7. edit _config.yml and change the website title, etc.</span><br><span class="line">8. edit node_modules/hexo-theme-next/_config.yml following the guide from</span><br><span class="line">   the official website of NeXT Theme </span><br><span class="line"></span><br><span class="line">// Now add &quot;tags&quot; and &quot;categories&quot;</span><br><span class="line">9. hexo new page tags</span><br><span class="line">10.nano source/tags/index.md: type:tags</span><br><span class="line">11.edit node_mo.../_config.yml: menu: tags: /tags/ || fa fa-tags</span><br><span class="line">12.do the same for categories</span><br></pre></td></tr></table></figure>
 <h2 id="local-blog-local-deployment">Local Blog, Local Deployment</h2>
