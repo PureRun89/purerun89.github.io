@@ -1,0 +1,40 @@
+<html><body>
+
+<pre>
+
+Return to the <a href="../index.html">Home Page</a>
+
+================================================================================
+
+------------------------------------------
+|                                        |
+|    Build NetHack on Windows in 2023    |
+|                                        |
+------------------------------------------
+
+It has been confusing that how to build NetHack on Windows platform. The code 
+seemed to use lots of 32-bit or unix-like tools which were hard to configure. 
+Recently I found that the development team provided a simple way to build the 
+game with the Visual Studio toolchain.
+
+The build only requires VS2022 (2017/2019 is also OK) and some Windows SDK
+(on my platform, 10.0.20348.0 for VS 2022) to be installed. It is also much 
+more convenient if Git is available. My platform is Windows 11 amd64.
+
+Firstly clone the source code.
+> git clone https://github.com/nethack/nethack
+> cd nethack
+
+Then install some dependencies. (Download them manually if compiling without 
+Git)
+> git submodule init
+> git submodule update
+
+Now open the solution (sys/windows/vs/nethack.sln) in VS and click build.
+When building it will show an error if the correct version of Windows SDK 
+isn't available.
+After a successful build, the NetHack executable is in binary/debug/x64.
+
+</pre>
+
+</body></html>
