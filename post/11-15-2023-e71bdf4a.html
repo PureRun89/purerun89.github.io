@@ -1,0 +1,147 @@
+<html><body>
+
+<pre>
+
+Return to the <a href="../index.html">Home Page</a>
+
+================================================================================
+
+----------------------------------------
+|                                      |
+|    Multi-File Programming in Rust    |
+|                                      |
+----------------------------------------
+
+Rust uses crates and modules to organize the source code of a project.
+Each project that produces a binary or library is considered a crate. In every 
+crate there might be a tree of modules.
+
+<strong> 1. Declare and use modules in one file </strong>
+
+Let's firstly consider how modules work in only one file 'main.rs'.
+
+Every module has a path. The path 'crate' is the root of the package. For 
+example, one can define some functions in the crate:
+
+fn a(s: i32) { println!("{}", s) }
+
+Then the path of 'a' is 'crate::a'. It can be directly called in main function, 
+like 'fn main() {a()}', but you can also call it by the path:
+
+fn main() { crate::a(1) } // or
+fn main() { use crate::a; a(1) }
+// Some trick
+fn main() { let a = 1; crate::a(a) }
+
+
+
+In the file you can define some modules with the syntax
+mod module_name; // no body
+mod module_name { ... } // with a body
+pub mod ... // public module
+
+The content in the module is defaultly private. To make it visible to super 
+scopes, use the 'pub' before 'mod'. The 'pub' can be replaced with 
+'pub(crate)' or 'pub(super)' to specify which scope can access the module.
+
+A module declaration can contain one or no body. If it doesn't have a body, 
+Rust compiler will find its content in other Rust source files. If it has a 
+body, its content is defined in the body. (Except for other modules in it, and 
+I'll talk about that later) Now I'm talking about one-file programming so I use 
+the module with a body:
+
+mod a {
+    pub mod b {
+        pub fn c() { println!("pub"); }
+        fn d () { println!("private"); }
+    }
+}
+
+Now the module tree looks like
+crate
+ |- a
+    |- b
+       |- c
+       |- d
+
+In the main function you can call functions from the modules.
+
+fn main() {
+    a::b::c();
+    // private items are not accessible
+    // a::b::d();
+    crate::a::b::c(); // This one also OK.
+}
+
+
+To simplify the function call (or other access to items in modules), use the 
+'use' statement.
+It can be placed anywhere in the file. 'Using' an item multiple times isn't 
+allowed.
+
+use a::b;
+fn main() {
+    use b::c;
+    c();
+}
+
+
+
+<strong> 2. How modules work among multiple files </strong>
+
+When declaring a module with no body, Rust compiler looks for the content in 
+other files. For a module with a path 'a::b::c', the compiler find it in the 
+file 'a/b/c.rs' (Long time before they used the 'a/b/c/mod.rs' but now it's 
+not suggested)
+
+For example, if you write the following in 'main.rs':
+mod a;
+mod b {
+    mod c { ... }
+    mod d;
+}
+
+then the module 'a' is at 'a.rs', and the module 'd' is at 'b/d.rs'.
+
+In those module files you can declare sub-modules, for example, writting this 
+in 'a.rs':
+pub mod e { ... }
+
+and then access 'a::e::...' in 'main.rs'.
+
+
+<strong> 3. More about 'use' and module declaration </strong>'
+
+'use' something with an alias: use ... as alias_name;
+
+'use' while specifying the scope:
+'use' considers its outside module as its default scope, that is 'self'. To 
+choose another scope, use 'crate' or 'super' after 'use':
+
+fn a() { ... }
+mod b {
+    fn a() { ... }
+    mod c {
+        a(); // call b::a
+        super::a(); // call crate::a
+        crate::a(); // same as above
+    }
+}
+
+It's notable that the 'super' is only allowed in the beginning of the path, 
+that is 'super::super::a' is OK but 'super::a::super::...' isn't.
+
+Before the module declaration, a 'path' prefix can be added to tell the 
+compiler to find the module body in another file:
+
+#[path = "aa"]
+mod a {
+    #[path = "bb.rs"]
+    mod b;
+}
+
+In the code above, the module 'a::b' is located at 'aa/bb.rs'.
+
+</pre>
+
+</body></html>
