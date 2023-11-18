@@ -1,0 +1,116 @@
+<html><body>
+
+<pre>
+
+Return to the <a href="../index.html">Home Page</a>
+
+================================================================================
+
+-----------------------------------------------------------
+|                                                         |
+|    Understanding the bug of lifetimes in Rust #25860    |
+|                                                         |
+-----------------------------------------------------------
+
+Despite using type checkers which "has been proved to be sound", Rust still has 
+several bugs of its type system in 2023. Some of the bugs can turn references 
+with any lifetime into &'static or &'static mut ones, and #25860 is one of the 
+most known one.
+
+In issue #25860, user "aturon" showed the following code that do the trick.
+
+<div style="background:#BBFFFF">
+static UNIT: &'static &'static () = &&();
+
+fn foo<'a, 'b, T>(_: &'a &'b (), v: &'b T) -> &'a T { v }
+
+fn bad<'a, T>(x: &'a T) -> &'static T {
+    let f: fn(_, &'a T) -> &'static T = foo;
+    f(UNIT, x)
+}
+</div>
+
+To understand that code, we need to firstly know how types and lifetimes work. 
+As we know, functions (and structs, traits, ...) in Rust may contain lifetime 
+bounds, but what happens when they are called with random lifetimes? Actually, 
+Rust compiler checks if the input type can be a "supertype" of the target type 
+using the technique of "Subtyping and Variance", and cast the target type into 
+the input type.
+
+For example, we define a function and a main body:
+
+<div style="background:#BBFFFF">
+fn foo<'a, 'b>(p1: &'a (), p2: &'b ()) where 'b: 'a {}
+
+fn main() {
+    let i1 = ();
+    let p1 = &i1; // &'a
+    {
+        let i2 = ();
+        let p2 = &i2; // &'b
+        foo(p1, p2);
+    }
+}
+</div>
+
+Seems we call the function while the lifetime of "p1" is longer than the one of 
+"p2" that 'b:'a isn't satisfied, but actually the code works. The reason is:
+the type of "foo(p1, p2)" can be written as "foo(&'a, &'b)" and 'a is a subtype 
+of 'b, so the target "foo(&'x, &'y) where 'y: 'x" can be casted into 
+"foo(&'b, &'b)" and then "foo(&'a, &'b)", because the parameter of a function 
+is contravariant to the lifetime.
+
+
+Now it seems that the type checker works very properly, but because of unknown 
+reason, it has a bug that the lifetime bound can be dropped when doing the type 
+casting. Let's use the code in #25860 above as an example. It can be written in 
+a more clear way:
+
+<div style="background:#BBFFFF">
+fn foo<'a, 'b, T>(_: &'a &'b (), v: &'b T) -> &'a T { v }
+
+fn bad<'a, T>(x: &'a T) -> &'static T {
+    let f1: for<'x, 'y> fn(&'x &'y (), &'y T) -> &'x T = foo;
+    // 1. Copy the function here
+    let f2: for<'x> fn(&'x &'a (), &'a T) -> &'x T = f1;
+    // 2. Instantiate 'y as 'a
+    let f3: for<'x> fn(&'x &'static (), &'a T) -> &'x T = f2;
+    // 3. By contravariant, turn &'x &'a into &'x &'static
+    let f4: fn(&'static &'static (), &'a T) -> &'static T = f3;
+    // 4. Instantiate 'x as 'static
+    f4(&&() as &'static &'static (), x)
+}
+</div>
+
+The original bound 'b:'a does nothing when casting the type of "foo".
+
+After turning this out, someone suggested in #25860 changing the way 
+contravariant works, but later an user posted another approach to this bug, 
+only using covariant:
+
+<div style="background:#BBFFFF">
+fn foo<'a, 'b, T>(_: &'a (), v: &'b T) -> (&'a &'b (), &'a T) {
+    (&&() as &'static &'static (), v as &'a T)
+}
+fn bad<'a, T>(x: &'a T) -> &'static T {
+    let f1: for<'x, 'y> fn(&'x (), &'y T) -> (&'x &'y (), &'x T) = foo;
+    let f2: for<'y> fn(&'static (), &'y T) -> (&'static &'y (), &'static T)
+        = f1;
+    let f3: for<'y> fn(&'static (), &'y T) -> (&'y &'y (), &'static T) = f2;
+    let f4: fn(&'static (), &'a T) -> (&'a &'a (), &'static T) = f3;
+    f4(&(), x).1
+}
+</div>
+
+The essence of the problem is just that the "where bound" (or those implicit 
+bounds like &'a &'b T) are dropped randomly, and this also caused other 
+unsound bugs like #84591 and #98117. The developers of Rust compiler 
+find this bug hard to fix. Someone suggested inproving the Rust's type system 
+by making HRTB written as for<...> where<...>, but it was refused by Rust team, 
+and the team is working in another way to try fixing the unsoundness. 
+Seems they will publish the new version of type checker in the nightly Rust 
+later and we can use it by adding "-Ztrait-solver=next" to rustc.
+
+</pre>
+
+</body></html>
