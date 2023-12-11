@@ -1,0 +1,83 @@
+<html><body>
+
+<pre>
+
+Return to the <a href="../index.html">Home Page</a>
+
+================================================================================
+
+--------------------------------------------------------------
+|                                                            |
+|    Configure kitty, process snapshot and something else    |
+|                                                            |
+--------------------------------------------------------------
+
+Recently my new project required me to run program in consoles and get the 
+real-time "snapshot" (that is the text content and its color) of the program by 
+Rust Language. I found KITTY a fantastic tool to do this work. (btw there are 
+many terminal emulators in 2023 now but it's really hard to find one that 
+supports snapshot :( )
+
+<strong> 1. Installation and configure kitty </strong>
+
+According to the official website, on MacOS and Linux kitty can be installed by 
+simple command:
+> curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+
+and the path of binary will be ~/.local/kitty.app/bin (on Linux)
+On Windows I have to use WSL in order to use kitty.
+
+After installation, the kitty terminal emulator can be run by 'cd' the binary 
+path and run './kitty', but on some platforms there are bugs that make terminal 
+stuck when running some programs. To prevent kitty from stuck, use this command 
+> LIBGL_ALWAYS_SOFTWARE=1 ./kitty
+
+You can configure kitty by creating a config file (The file doesn't exist 
+defaultly) at ~/.config/kitty/kitty.conf
+
+For example, to configure the kitty window size:
+(in ~/.config/kitty/kitty.conf)
+# window settings
+remember_window_size no
+initial_window_width 100c
+initial_window_height 30c
+
+<strong> 2. Remote control and get snapshot </strong>
+
+Kitty allows remote control, that is controlling other programs in this or 
+another kitty window by shell command.
+
+To start a kitty session that allows remote control, run the following command 
+> ./kitty -o allow_remote_control=yes -o enabled_layouts=tall
+
+Then in the running kitty window, run another kitty's command called "KITTEN" 
+to run other programs:
+> ./kitten @ launch --title bash --keep-focus --type os-window bash
+> ./kitten @ send-text --match cmdline:bash blahblah
+
+Run this command to get a snapshot
+> kitten @ get-text --match cmdline:{...}
+The result will only contain the plain text. To include text color and cursor 
+position, add the parameters "--ansi --add-cursor".
+
+Kitty kindly use the<a href="https://en.wikipedia.org/wiki/ANSI_escape_code"> ANSI escape code </a>in its 'get-text --ansi' result.
+
+By the way, there is a nice library called "ansi-parser" on crates.io for 
+parsing those ANSI escape code in Rust.
+
+<strong> 3. Some alternatives </strong>
+
+Before I found kitty as a nice tool, I tried other ways to run program and get 
+snapshot.
+
+Actually, I tried to run the program in Windows Terminal, and continuously 
+send keystrokes "Ctrl+Shift+A, Ctrl+Shift+C" to get snapshot. Rust has two 
+crates, "enigo" for sending keystrokes, and "clipboard-win" for reading text 
+from pasteboard.
+
+The problem is that I can't get cursor position in this way, and the terminal 
+flashes too much because of the selecting. Thus I turned to kitty.
+
+</pre>
+
+</body></html>
